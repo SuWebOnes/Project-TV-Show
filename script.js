@@ -17,10 +17,6 @@ function makePageForEpisodes(episodeList) {
   const rootElem = document.getElementById("root");
   rootElem.innerHTML = ''; // Clear any previous content
 
-  // Show episode count
-  const episodeCount = document.createElement('p');
-  episodeCount.textContent = `Got ${episodeList.length} episode(s)`;
-  rootElem.appendChild(episodeCount);
 
   // Create a container to hold all episode cards
   const episodeContainer = document.createElement('div');
