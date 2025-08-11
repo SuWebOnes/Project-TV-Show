@@ -1,108 +1,234 @@
+/* ===== Global Reset ===== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 body {
   font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 1rem;
-  background-color: #f8f9fa;
-  color: #333;
+  background-color: #121212;
+  color: #ffffff; /* pure white for max contrast */
+  line-height: 1.6;
+  font-size: 16px;
 }
 
-/* Controls container above #root, horizontal layout */
-#controls-container {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  flex-wrap: nowrap;
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* Controls styles */
-#controls-container input,
-#controls-container select {
-  padding: 0.4rem 0.6rem;
-  font-size: 1rem;
-  min-width: 150px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-}
-
-#controls-container p {
-  margin: 0;
-  white-space: nowrap;
-  font-weight: bold;
-  color: #555;
-  min-width: 160px;
-  text-align: right;
-  flex-shrink: 0;
-}
-
-/* Root container */
-#root {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-/* Episode grid */
-#episode-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1.5rem;
-}
-
-/* Episode card with shadow */
-.episode-card {
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  overflow: hidden;
-  padding: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  transition: box-shadow 0.3s ease;
-  
-}
-
-.episode-card:hover {
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
-}
-
-.episode-card h3 {
-  font-size: 1.1rem;
-  margin-top: 0;
-}
-
-.episode-card img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 5px;
-  margin: 0.5rem 0;
-}
-
-.episode-card p {
-  text-align: justify;
-  font-size: 0.95rem;
-  line-height: 1.4;
-}
-
-.episode-card a {
-  display: inline-block;
-  margin-top: 0.5rem;
-  color: #0077cc;
-  text-decoration: none;
-}
-
-.episode-card a:hover {
+/* Links */
+a {
+  color: #1e90ff; /* DodgerBlue */
   text-decoration: underline;
 }
 
-/* Footer */
-footer {
-  margin-top: 2rem;
-  text-align: center;
-  font-size: 0.9rem;
-  color: #777;
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
+a:hover,
+a:focus {
+  color: #63b3ed;
+  outline: none;
+  text-decoration: none;
+  box-shadow: 0 0 0 3px #63b3ed;
 }
+
+/* ===== Root Container ===== */
+#root {
+  padding: 20px;
+}
+
+/* ===== Controls ===== */
+#controls-container {
+  position: sticky;
+  top: 0;
+  background-color: #1f1f1f;
+  padding: 15px;
+  z-index: 1000;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 3px solid #444;
+}
+
+/* Label accessibility */
+#controls-container label {
+  font-weight: 700;
+  color: #eeeeee;
+  font-size: 1rem;
+}
+
+/* Inputs/selects */
+#controls-container input,
+#controls-container select {
+  padding: 8px;
+  border-radius: 4px;
+  border: 2px solid #666;
+  background-color: #2a2a2a;
+  color: #ffffff;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+/* Focus styles */
+#controls-container input:focus,
+#controls-container select:focus {
+  border-color: #1e90ff;
+  outline: none;
+  box-shadow: 0 0 5px #1e90ff;
+}
+
+/* Placeholder */
+#controls-container input::placeholder {
+  color: #bbbbbb;
+}
+
+/* Additional info text */
+#controls-container p {
+  margin-left: auto;
+  font-size: 0.95rem;
+  color: #dddddd;
+}
+
+/* ===== Navigation Bar ===== */
+#nav-bar {
+  display: none;
+  background-color: #1f1f1f;
+  padding: 10px 15px;
+  border-bottom: 3px solid #444;
+}
+
+#nav-bar a {
+  color: #ffae42; /* amber */
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-decoration: underline;
+}
+
+#nav-bar a:focus,
+#nav-bar a:hover {
+  color: #ffca6c;
+  outline: none;
+  box-shadow: 0 0 0 3px #ffca6c;
+  text-decoration: none;
+}
+
+/* ===== Card Container ===== */
+#show-container,
+#episode-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-top: 20px;
+}
+
+/* ===== Card Styles ===== */
+.show-card,
+.episode-card {
+  background-color: #282828;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  color: #ffffff;
+  border: 2px solid transparent;
+}
+
+/* Hover and focus states */
+.show-card:hover,
+.episode-card:hover,
+.show-card:focus-within,
+.episode-card:focus-within {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.75);
+  border-color: #1e90ff;
+  outline: none;
+}
+
+.show-card img,
+.episode-card img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-bottom: 2px solid #444;
+}
+
+.show-info,
+.episode-info {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.show-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #1e90ff;
+  cursor: pointer;
+}
+
+.show-title:focus {
+  outline: 3px solid #1e90ff;
+  outline-offset: 3px;
+}
+
+.meta {
+  font-size: 0.9rem;
+  color: #dddddd;
+}
+
+.summary {
+  font-size: 1rem;
+  text-align: justify;
+  color: #eeeeee;
+}
+
+
+.view-link {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 8px 14px;
+  background-color: #d3d3d3; /* light gray */
+  color: #000000; /* black text for max contrast */
+  border-radius: 8px;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: underline;
+  transition: background-color 0.3s ease;
+}
+
+.view-link:hover,
+.view-link:focus {
+  background-color: #b0b0b0; /* darker gray on hover/focus */
+  outline: none;
+  box-shadow: 0 0 0 3px #808080; /* gray focus ring */
+  text-decoration: none;
+}
+
+/* ===== Footer ===== */
+footer {
+  text-align: center;
+  padding: 20px;
+  background-color: #1f1f1f;
+  color: #dddddd;
+  font-size: 0.95rem;
+}
+
+footer a {
+  color: #1e90ff;
+  text-decoration: underline;
+}
+
+footer a:hover,
+footer a:focus {
+  color: #63b3ed;
+  outline: none;
+  box-shadow: 0 0 0 3px #63b3ed;
+  text-decoration: none;
+}
+
+/* ===== Accessibility focus styles ===== */
+:focus-visible {
+  outline: 3px solid #1e90ff !important;
+  outline-offset: 3px;
+}
+
