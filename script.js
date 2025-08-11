@@ -2,74 +2,50 @@ document.addEventListener("DOMContentLoaded", setup);
 
 async function setup() {
   const rootElem = document.getElementById("root");
+
+  // Controls container
+  const controlsContainer = document.createElement("div");
+  controlsContainer.id = "controls-container";
+  rootElem.before(controlsContainer);
+
+  // Navigation bar
+  const navBar = document.createElement("div");
+  navBar.id = "nav-bar";
+  navBar.innerHTML = `<a href="#" id="back-to-shows">← Back to Shows</a>`;
+  rootElem.before(navBar);
+
+  // State
   const episodeCache = {};
   let allShows = [];
   let allEpisodes = [];
 
-  const controlsContainer = document.createElement("div");
-  controlsContainer.id = "controls-container";
-  document.body.insertBefore(controlsContainer, rootElem);
+  // Controls
+  const showSearchLabel = createLabel("show-search", "Search Shows:");
+  const showSearchInput = createInput("show-search", "showSearch", "Type to search...");
 
-  const showSearchLabel = document.createElement("label");
-  showSearchLabel.setAttribute("for", "show-search");
-  showSearchLabel.textContent = "Search Shows:";
-  controlsContainer.appendChild(showSearchLabel);
+  const showSelectLabel = createLabel("show-select", "Select Show:");
+  const showSelect = createSelect("show-select", "showSelect");
 
-  const showSearchInput = document.createElement("input");
-  showSearchInput.id = "show-search";
-  showSearchInput.name = "showSearch";
-  showSearchInput.placeholder = "Type to search...";
-  controlsContainer.appendChild(showSearchInput);
+  const episodeSearchLabel = createLabel("episode-search", "Search Episodes:");
+  const episodeSearchInput = createInput("episode-search", "episodeSearch", "Type to search...");
+  episodeSearchLabel.style.display = episodeSearchInput.style.display = "none";
 
-  const showSelectLabel = document.createElement("label");
-  showSelectLabel.setAttribute("for", "show-select");
-  showSelectLabel.textContent = "Select Show:";
-  controlsContainer.appendChild(showSelectLabel);
-
-  const showSelect = document.createElement("select");
-  showSelect.id = "show-select";
-  showSelect.name = "showSelect";
-  controlsContainer.appendChild(showSelect);
-
-  const episodeSearchLabel = document.createElement("label");
-  episodeSearchLabel.setAttribute("for", "episode-search");
-  episodeSearchLabel.textContent = "Search Episodes:";
-  episodeSearchLabel.style.display = "none";
-  controlsContainer.appendChild(episodeSearchLabel);
-
-  const episodeSearchInput = document.createElement("input");
-  episodeSearchInput.id = "episode-search";
-  episodeSearchInput.name = "episodeSearch";
-  episodeSearchInput.placeholder = "Type to search...";
-  episodeSearchInput.style.display = "none";
-  controlsContainer.appendChild(episodeSearchInput);
-
-  const episodeSelectLabel = document.createElement("label");
-  episodeSelectLabel.setAttribute("for", "episode-select");
-  episodeSelectLabel.textContent = "Select Episode:";
-  episodeSelectLabel.style.display = "none";
-  controlsContainer.appendChild(episodeSelectLabel);
-
-  const episodeSelect = document.createElement("select");
-  episodeSelect.id = "episode-select";
-  episodeSelect.name = "episodeSelect";
-  episodeSelect.style.display = "none";
-  controlsContainer.appendChild(episodeSelect);
+  const episodeSelectLabel = createLabel("episode-select", "Select Episode:");
+  const episodeSelect = createSelect("episode-select", "episodeSelect");
+  episodeSelectLabel.style.display = episodeSelect.style.display = "none";
 
   const resultCount = document.createElement("p");
   resultCount.style.margin = "0";
-  controlsContainer.appendChild(resultCount);
 
-  function updateShowSearchInfo(filteredCount, totalCount, term) {
-    let termText = term ? ` | ${term} |` : "";
-    let label = filteredCount === 1 ? "show" : "shows";
-    resultCount.textContent = `Found ${filteredCount} ${label}${termText}`;
-  }
+  controlsContainer.append(
+    showSearchLabel, showSearchInput,
+    showSelectLabel, showSelect,
+    episodeSearchLabel, episodeSearchInput,
+    episodeSelectLabel, episodeSelect,
+    resultCount
+  );
 
-  function updateEpisodeCount(displaying, total) {
-    resultCount.textContent = `Displaying ${displaying} / ${total} episodes`;
-  }
-
+  // Fetch shows
   const res = await fetch("https://api.tvmaze.com/shows");
   allShows = await res.json();
   allShows.sort((a, b) => a.name.localeCompare(b.name));
@@ -84,30 +60,36 @@ async function setup() {
   makePageForShows(allShows);
   updateShowSearchInfo(allShows.length, allShows.length, "");
 
+  // Event listeners
   showSearchInput.addEventListener("input", () => {
-    const term = showSearchInput.value.trim();
+    const term = showSearchInput.value.trim().toLowerCase();
     const filtered = allShows.filter(s =>
-      s.name.toLowerCase().includes(term.toLowerCase()) ||
-      s.genres.join(" ").toLowerCase().includes(term.toLowerCase()) ||
-      (s.summary && s.summary.toLowerCase().includes(term.toLowerCase()))
+      s.name.toLowerCase().includes(term) ||
+      s.genres.join(" ").toLowerCase().includes(term) ||
+      (s.summary && s.summary.toLowerCase().includes(term))
     );
     makePageForShows(filtered);
     updateShowSearchInfo(filtered.length, allShows.length, term);
   });
 
-  rootElem.addEventListener("click", async e => {
+  showSelect.addEventListener("change", () => {
+    const selectedShowId = showSelect.value;
+    const selectedShow = allShows.find(show => show.id == selectedShowId);
+    if (selectedShow) loadEpisodes(selectedShow.id);
+  });
+
+  rootElem.addEventListener("click", e => {
     if (e.target.classList.contains("show-title")) {
-      const showId = e.target.dataset.showId;
-      if (!episodeCache[showId]) {
-        const epRes = await fetch(`https://api.tvmaze.com/shows/${showId}/episodes`);
-        episodeCache[showId] = await epRes.json();
-      }
-      allEpisodes = episodeCache[showId];
-      makePageForEpisodes(allEpisodes);
-      toggleControlsForEpisodes(true);
-      populateEpisodeSelect(allEpisodes, episodeSelect);
-      updateEpisodeCount(allEpisodes.length, allEpisodes.length);
+      loadEpisodes(e.target.dataset.showId);
     }
+  });
+
+  document.getElementById("back-to-shows").addEventListener("click", e => {
+    e.preventDefault();
+    makePageForShows(allShows);
+    toggleControlsForEpisodes(false);
+    navBar.style.display = "none";
+    updateShowSearchInfo(allShows.length, allShows.length, showSearchInput.value.trim());
   });
 
   episodeSearchInput.addEventListener("input", () => {
@@ -134,6 +116,19 @@ async function setup() {
     episodeSearchInput.value = "";
   });
 
+  async function loadEpisodes(showId) {
+    if (!episodeCache[showId]) {
+      const epRes = await fetch(`https://api.tvmaze.com/shows/${showId}/episodes`);
+      episodeCache[showId] = await epRes.json();
+    }
+    allEpisodes = episodeCache[showId];
+    makePageForEpisodes(allEpisodes);
+    toggleControlsForEpisodes(true);
+    populateEpisodeSelect(allEpisodes, episodeSelect);
+    updateEpisodeCount(allEpisodes.length, allEpisodes.length);
+    navBar.style.display = "block";
+  }
+
   function toggleControlsForEpisodes(isEpisodeView) {
     showSearchInput.style.display = isEpisodeView ? "none" : "";
     showSearchLabel.style.display = isEpisodeView ? "none" : "";
@@ -146,33 +141,30 @@ async function setup() {
   }
 
   function makePageForShows(showList) {
-    rootElem.innerHTML = "";
-    const container = document.createElement("div");
-    container.id = "show-container";
+    rootElem.innerHTML = `<div id="show-container"></div>`;
+    const container = document.getElementById("show-container");
     showList.forEach(show => {
       const card = document.createElement("div");
       card.className = "show-card";
       card.innerHTML = `
         <img src="${show.image ? show.image.medium : ""}" alt="Poster for ${show.name}">
         <div class="show-info">
-          <h3 class="show-title" data-show-id="${show.id}" style="cursor:pointer">${show.name}</h3>
-          <div class="meta genres">Genres: ${show.genres.join(", ")}</div>
-          <div class="meta status">Status: ${show.status}</div>
-          <div class="meta rating">Rating: ${show.rating?.average || "N/A"}</div>
-          <div class="meta runtime">Runtime: ${show.runtime || "N/A"} min</div>
+          <h3 class="show-title" data-show-id="${show.id}">${show.name}</h3>
+          <div class="meta">Genres: ${show.genres.join(", ")}</div>
+          <div class="meta">Status: ${show.status}</div>
+          <div class="meta">Rating: ${show.rating?.average || "N/A"}</div>
+          <div class="meta">Runtime: ${show.runtime || "N/A"} min</div>
           <div class="summary">${shortenSummary(show.summary || "No summary available.")}</div>
           <a href="${show.url}" target="_blank" class="view-link">View on TVMaze</a>
         </div>
       `;
       container.appendChild(card);
     });
-    rootElem.appendChild(container);
   }
 
   function makePageForEpisodes(episodes) {
-    rootElem.innerHTML = "";
-    const container = document.createElement("div");
-    container.id = "episode-container";
+    rootElem.innerHTML = `<div id="episode-container"></div>`;
+    const container = document.getElementById("episode-container");
     episodes.forEach(ep => {
       const card = document.createElement("div");
       card.className = "episode-card";
@@ -186,17 +178,6 @@ async function setup() {
       `;
       container.appendChild(card);
     });
-    rootElem.appendChild(container);
-  }
-
-  function shortenSummary(summary) {
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = summary;
-    const text = tempDiv.textContent || tempDiv.innerText || "";
-    if (text.length > 150) {
-      return `${text.slice(0, 150)}... <span class="read-more">Read more</span>`;
-    }
-    return text;
   }
 
   function populateEpisodeSelect(list, selectElem) {
@@ -213,14 +194,47 @@ async function setup() {
     });
   }
 
+  function updateShowSearchInfo(filteredCount, totalCount, term) {
+    let termText = term ? ` | ${term} |` : "";
+    let label = filteredCount === 1 ? "show" : "shows";
+    resultCount.textContent = `Found ${filteredCount} ${label}${termText}`;
+  }
+
+  function updateEpisodeCount(displaying, total) {
+    resultCount.textContent = `Displaying ${displaying} / ${total} episodes`;
+  }
+
+  function shortenSummary(summary) {
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = summary;
+    const text = tempDiv.textContent || tempDiv.innerText || "";
+    return text.length > 150 ? `${text.slice(0, 150)}...` : text;
+  }
+
   function formatEpisodeCode(season, number) {
     return `S${String(season).padStart(2, "0")}E${String(number).padStart(2, "0")}`;
   }
 
-  rootElem.addEventListener("click", e => {
-    if (e.target.classList.contains("read-more")) {
-      const parent = e.target.parentElement;
-      parent.textContent = parent.textContent.replace("... Read more", "");
-    }
-  });
+  function createLabel(forId, text) {
+    const label = document.createElement("label");
+    label.setAttribute("for", forId);
+    label.textContent = text;
+    return label;
+  }
+
+  function createInput(id, name, placeholder) {
+    const input = document.createElement("input");
+    input.id = id;
+    input.name = name;
+    input.placeholder = placeholder;
+    return input;
+  }
+
+  function createSelect(id, name) {
+    const select = document.createElement("select");
+    select.id = id;
+    select.name = name;
+    return select;
+  }
 }
+
